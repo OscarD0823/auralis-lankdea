@@ -13,7 +13,7 @@ def resource_root() -> Path:
 @dataclass(frozen=True)
 class EditionConfig:
     edition: str = "local"
-    name: str = "Lankdea Local"
+    name: str = "Auralis Lankdea"
 
     @classmethod
     def load(cls, path: Path | None = None) -> "EditionConfig":

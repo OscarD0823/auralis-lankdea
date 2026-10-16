@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .editor_draft import EncryptedEditorDraft
+
 import os
 import secrets
 import socket
@@ -82,7 +84,7 @@ GOOD = (0.42, 0.88, 0.63, 1)
 DANGER = (0.88, 0.25, 0.38, 1)
 
 ASSISTANT_WELCOME_TEXT = (
-    "Bienvenido a Lankdea. Identidad verificada. El relicario está abierto y todos "
+    "Bienvenido a Auralis Lankdea. Identidad verificada. El relicario está abierto y todos "
     "los sistemas de protección están activos. Todo está listo."
 )
 
@@ -589,7 +591,7 @@ class CinematicIntro(FloatLayout):
 
 
 class LankdeaApp(App):
-    title = "Lankdea"
+    title = "Auralis Lankdea"
 
     def build(self):
         if Metrics.density <= 0:
@@ -612,6 +614,7 @@ class LankdeaApp(App):
         data_dir = Path(os.environ.get("LANKDEA_DATA_DIR", self.user_data_dir))
         self.repository = LocalVaultRepository(data_dir / "lankdea_vault_v2.json", self.device)
         self.legacy_path = data_dir / "lankdea_cofre.json"
+        self._pending_editor_flushes = set()
         self._pending_security_message = ""
         self._pending_file_action = None
         self._file_busy = False
@@ -1299,20 +1302,25 @@ class LankdeaApp(App):
             self._edit_note_popup(item)
 
     def _edit_password_popup(self, item: dict[str, Any] | None):
+        draft_key = f"{self.device}:password:{(item or {}).get('id', 'new')}"
         item = dict(item or {})
+        recovered = self.repository.editor_draft(draft_key)
+        initial = {**item, **(recovered or {})}
         box = Card(orientation="vertical", padding=dp(14), spacing=dp(8))
-        service = input_field(self.t("service"), text=str(item.get("service", "")))
-        username = input_field(self.t("username"), text=str(item.get("username", "")))
+        service = input_field(self.t("service"), text=str(initial.get("service", "")))
+        username = input_field(self.t("username"), text=str(initial.get("username", "")))
         password = input_field(
-            self.t("password"), password=True, text=str(item.get("password", ""))
+            self.t("password"), password=True, text=str(initial.get("password", ""))
         )
         reveal = VaultButton(text=self.t("show_password"), compact=True)
-        notes = input_field(self.t("optional_notes"), multiline=True, text=str(item.get("notes", "")))
+        notes = input_field(self.t("optional_notes"), multiline=True, text=str(initial.get("notes", "")))
         for field in (service, username, password, reveal, notes):
             box.add_widget(field)
         save = VaultButton(text=self.t("save_credential"), accent=True)
         box.add_widget(save)
         popup = adaptive_popup(self.t("edit_credential") if item else self.t("new_credential"), box, 0.82)
+
+        recovery = self._track_editor_draft(popup, draft_key, {"service": service, "username": username, "password": password, "notes": notes}, box, bool(recovered))
 
         def commit(*_):
             if not service.text.strip() or not password.text:
@@ -1326,7 +1334,8 @@ class LankdeaApp(App):
                 password=password.text,
                 notes=notes.text.strip(),
             )
-            self.repository.upsert_item(record)
+            self.repository.upsert_item(record, draft_key=draft_key)
+            recovery.finish()
             popup.dismiss()
             self.refresh_items(self.search.text)
 
@@ -1341,15 +1350,20 @@ class LankdeaApp(App):
         popup.open()
 
     def _edit_note_popup(self, item: dict[str, Any] | None):
+        draft_key = f"{self.device}:note:{(item or {}).get('id', 'new')}"
         item = dict(item or {})
+        recovered = self.repository.editor_draft(draft_key)
+        initial = {**item, **(recovered or {})}
         box = Card(orientation="vertical", padding=dp(14), spacing=dp(8))
-        title = input_field(self.t("title"), text=str(item.get("title", "")))
-        content = input_field(self.t("note_content"), multiline=True, text=str(item.get("content", "")))
+        title = input_field(self.t("title"), text=str(initial.get("title", "")))
+        content = input_field(self.t("note_content"), multiline=True, text=str(initial.get("content", "")))
         box.add_widget(title)
         box.add_widget(content)
         save = VaultButton(text=self.t("save_note"), accent=True)
         box.add_widget(save)
         popup = adaptive_popup(self.t("edit_note") if item else self.t("new_note"), box, 0.70)
+
+        recovery = self._track_editor_draft(popup, draft_key, {"title": title, "content": content}, box, bool(recovered))
 
         def commit(*_):
             if not title.text.strip() and not content.text.strip():
@@ -1357,12 +1371,39 @@ class LankdeaApp(App):
                 return
             record = item or new_item("note", self.device)
             record.update(title=title.text.strip() or "Nota", content=content.text.strip())
-            self.repository.upsert_item(record)
+            self.repository.upsert_item(record, draft_key=draft_key)
+            recovery.finish()
             popup.dismiss()
             self.refresh_items(self.search.text)
 
         save.bind(on_release=commit)
         popup.open()
+
+    def _track_editor_draft(self, popup, key, fields, box, recovered):
+        recovery = EncryptedEditorDraft(self.repository, key, lambda: {name: field.text for name, field in fields.items()})
+        status = make_label("Borrador recuperado · cifrado localmente" if recovered else "Autoguardado cifrado local", 12, MUTED, False, 28)
+        box.add_widget(status)
+        def flush(*_):
+            try:
+                recovery.flush()
+                status.text = "Borrador cifrado guardado"
+            except Exception:
+                status.text = "No se pudo guardar el borrador. Guarda una copia antes de cerrar."
+        trigger = Clock.create_trigger(flush, 0.4)
+        for field in fields.values():
+            field.bind(text=lambda *_: trigger())
+        self._pending_editor_flushes.add(flush)
+        def close(*_):
+            trigger.cancel()
+            flush()
+            self._pending_editor_flushes.discard(flush)
+            recovery.finish()
+        popup.bind(on_dismiss=close)
+        return recovery
+
+    def _flush_editor_drafts(self):
+        for flush in list(self._pending_editor_flushes):
+            flush()
 
     def confirm_delete(self, item: dict[str, Any]):
         box = Card(orientation="vertical", padding=dp(16), spacing=dp(12))
@@ -1530,7 +1571,7 @@ class LankdeaApp(App):
         # Comprobación solo a petición: la aplicación funciona sin Internet.
         box = Card(orientation="vertical", padding=dp(14), spacing=dp(10), size_hint_y=None)
         box.bind(minimum_height=box.setter("height"))
-        box.add_widget(make_label(f"Lankdea Local {__version__}", 20, TEXT, True, 36))
+        box.add_widget(make_label(f"Auralis Lankdea {__version__}", 20, TEXT, True, 36))
         box.add_widget(make_label(
             "Actualiza con el ZIP completo: instalador Windows + APK + manual. "
             "Haz un respaldo y cierra el cofre antes de instalar. "
@@ -1988,6 +2029,7 @@ class LankdeaApp(App):
         self.popup("No se completó", str(exc))
 
     def lock(self, *, immediate=False):
+        self._flush_editor_drafts()
         if not self.repository.unlocked:
             self.show_unlock()
             return
@@ -2051,6 +2093,7 @@ class LankdeaApp(App):
         return None
 
     def on_stop(self):
+        self._flush_editor_drafts()
         self._stop_peer_services()
         self.repository.lock()
         self._clear_clipboard()

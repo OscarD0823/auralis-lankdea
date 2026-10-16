@@ -1,12 +1,12 @@
 [app]
-title = Lankdea Local Direct
+title = Auralis Lankdea
 package.name = lankdealocal
 package.domain = app.lankdea
 source.dir = .
 source.include_exts = py,png,json,kv,ttf,otf,wav,txt
 source.exclude_dirs = tests,.venv,build,dist,__pycache__,assets/splash_frames,scripts,docs
 source.exclude_patterns = *.keystore,*.jks,*.p12,*.pfx,*.pem,*.key,*.lksource,*dpapi*,*firebase*.json
-version = 3.6.0
+version = 3.7.0
 requirements = python3,kivy,cryptography,pyotp,qrcode,pillow,requests,urllib3
 orientation = portrait,landscape,portrait-reverse,landscape-reverse
 fullscreen = 0

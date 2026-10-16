@@ -11,7 +11,7 @@
 
 [Setup]
 AppId={{B1ACDE32-A2AA-4E20-A7F2-D44B387A1392}
-AppName=Lankdea Local
+AppName=Auralis Lankdea
 AppVersion={#AppVersion}
 AppPublisher=OscarD0823
 AppPublisherURL=https://github.com/OscarD0823
@@ -19,7 +19,7 @@ AppSupportURL=https://github.com/OscarD0823/Lankdea-APK
 AppUpdatesURL=https://github.com/OscarD0823/Lankdea-APK/releases
 LicenseFile={#LicensePath}
 DefaultDirName={localappdata}\Programs\Lankdea
-DefaultGroupName=Lankdea
+DefaultGroupName=Auralis Lankdea
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -47,10 +47,10 @@ Source: "{#LicensePath}"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: igno
 Source: "{#NoticesPath}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Lankdea"; Filename: "{app}\Lankdea-PC.exe"
-Name: "{userdesktop}\Lankdea"; Filename: "{app}\Lankdea-PC.exe"; Tasks: desktopicon
+Name: "{group}\Auralis Lankdea"; Filename: "{app}\Lankdea-PC.exe"
+Name: "{userdesktop}\Auralis Lankdea"; Filename: "{app}\Lankdea-PC.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\Lankdea-PC.exe"; Description: "Abrir Lankdea"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Lankdea-PC.exe"; Description: "Abrir Auralis Lankdea"; Flags: nowait postinstall skipifsilent
 
 ; No hay UninstallDelete: jamás borrar %APPDATA%\lankdea ni el cofre.

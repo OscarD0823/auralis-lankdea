@@ -153,7 +153,23 @@ class LocalVaultRepository:
                 raise
             return self.snapshot()
 
-    def upsert_item(self, item: dict[str, Any]) -> dict[str, Any]:
+    def editor_draft(self, key: str) -> dict[str, Any] | None:
+        with self._lock:
+            value = self.snapshot()["settings"].get("editor_drafts", {}).get(key)
+            return deepcopy(value) if isinstance(value, dict) else None
+
+    def save_editor_draft(self, key: str, values: dict[str, str]) -> None:
+        if not isinstance(key, str) or not key or len(key) > 300 or not isinstance(values, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in values.items()):
+            raise VaultCryptoError("El borrador no es válido.")
+        with self._lock:
+            document = self.snapshot()
+            drafts = document["settings"].setdefault("editor_drafts", {})
+            if key not in drafts and len(drafts) >= 32:
+                raise VaultCryptoError("Hay 32 borradores pendientes. Guarda alguno antes de crear otro.")
+            drafts[key] = deepcopy(values)
+            self.replace(document)
+
+    def upsert_item(self, item: dict[str, Any], *, draft_key: str | None = None) -> dict[str, Any]:
         with self._lock:
             document = self.snapshot()
             item = deepcopy(item)
@@ -167,6 +183,8 @@ class LocalVaultRepository:
                     break
             if not found:
                 document["items"].append(item)
+            if draft_key:
+                document["settings"].get("editor_drafts", {}).pop(draft_key, None)
             return self.replace(document)
 
     def delete_item(self, item_id: str) -> dict[str, Any]:

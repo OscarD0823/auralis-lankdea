@@ -40,7 +40,7 @@ def test_sensitive_ui_uses_memory_only_qr_masked_password_and_android_secure_fla
     ui = (ROOT / "lankdea" / "ui.py").read_text(encoding="utf-8")
     assert 'qrcode.make(uri).save(qr_buffer, format="PNG")' in ui
     assert 'Image(texture=qr_texture)' in ui
-    assert 'password=True, text=str(item.get("password", ""))' in ui
+    assert 'password=True, text=str(initial.get("password", ""))' in ui
     assert "FLAG_SECURE" in ui
 
 
