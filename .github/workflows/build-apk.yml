@@ -73,10 +73,9 @@ jobs:
             ~/.buildozer/android/platform/android-sdk
             ~/.buildozer/android/platform/android-ndk-r27c
             ~/.buildozer/android/platform/apache-ant-1.9.4
-          key: buildozer-v4-${{ runner.os }}-local-${{ hashFiles('1-programa/buildozer.local.spec', '1-programa/pyproject.toml') }}
+          key: buildozer-v5-${{ runner.os }}-${{ github.repository_id }}-local-${{ hashFiles('1-programa/buildozer.local.spec', '1-programa/pyproject.toml') }}
           restore-keys: |
-            buildozer-v4-${{ runner.os }}-local-
-            buildozer-v3-${{ runner.os }}-local-
+            buildozer-v5-${{ runner.os }}-${{ github.repository_id }}-local-
 
       - name: Migrar caché anterior a la carpeta del programa
         shell: bash
