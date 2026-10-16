@@ -8,7 +8,7 @@ import requests
 
 from . import __version__
 
-REPOSITORY = "OscarD0823/Lankdea-APK"
+REPOSITORY = "OscarD0823/auralis-lankdea"
 RELEASES_URL = f"https://github.com/{REPOSITORY}/releases"
 API_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 

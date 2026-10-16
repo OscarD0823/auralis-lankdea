@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lankdea-relicario"
-version = "3.7.0"
+version = "3.7.1"
 license = "MIT"
 description = "Relicario cifrado local para Windows y Android con sincronización directa"
 authors = [{name = "OscarD0823"}]

@@ -28,7 +28,7 @@ DATOS Y SINCRONIZACIÓN
 ACTUALIZACIONES
 - En la app: Actualizaciones y ayuda > Comprobar versión publicada.
 - La consulta es voluntaria y no envía el cofre ni contraseñas a GitHub.
-- Código y descargas públicos: https://github.com/OscarD0823/Lankdea-APK/releases
+- Código y descargas públicos: https://github.com/OscarD0823/auralis-lankdea/releases
 - Código original MIT; conserva LICENSE.txt y THIRD-PARTY-NOTICES.txt al redistribuir.
 - No hay instalación automática ni parches diferenciales. Se instala el paquete completo.
 

@@ -30,7 +30,7 @@ Lankdea-APK/
 
 ## Instalar la aplicación terminada
 
-1. Abre [Descargas públicas / Releases](https://github.com/OscarD0823/Lankdea-APK/releases).
+1. Abre [Descargas públicas / Releases](https://github.com/OscarD0823/auralis-lankdea/releases).
 2. Descarga el ZIP completo de la versión publicada, o el EXE y la APK por separado.
    No necesitas una cuenta GitHub. Si todavía no hay Release, la publicación está pendiente;
    los artefactos de **Actions** son compilaciones de pruebas y requieren acceso a GitHub.
